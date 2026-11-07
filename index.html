@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excavaciones Cortés S.A.S. - Sistema de Control y Flota</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        industrial: {
+                            50: '#fffbeed',
+                            100: '#fef3c7',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                            700: '#b45309',
+                            DEFAULT: '#f59e0b',
+                        },
+                        darkbg: {
+                            900: '#0f172a',
+                            800: '#1e293b',
+                            700: '#334155'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-900">
+
+    <!-- APP CONTAINER -->
+    <div id="app" class="min-h-screen flex flex-col">
+
+        <!-- ==================== LOGIN SCREEN ==================== -->
+        <div id="login-view" class="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+            <!-- Ground excavation decorative pattern -->
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            
+            <div class="w-full max-w-md bg-slate-900/90 border border-slate-800 p-8 rounded-2xl shadow-2xl backdrop-blur-md relative z-10">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500 text-slate-950 text-3xl mb-4 shadow-lg shadow-amber-500/20 font-extrabold">
+                        <i class="fa-solid fa-truck-monster"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white uppercase">Excavaciones Cortés</h1>
+                    <p class="text-xs text-amber-500 font-semibold tracking-widest mt-1">SISTEMA DE CONTROL DE FLOTA Y DOCUMENTACIÓN</p>
+                </div>
+
+                <!-- Alert Message -->
+                <div id="login-alert" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
+                    <i class="fa-solid fa-circle-exclamation text-base"></i>
+                    <span id="login-alert-text">Usuario o contraseña incorrectos</span>
+                </div>
+
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Usuario Administrador</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-user"></i></span>
+                            <input type="text" id="username" required value="admin" class="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-white text-sm transition" placeholder="Nombre de usuario">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Contraseña</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="password" required value="1234" class="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-white text-sm transition" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                        <span>Ingresar al Sistema</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-slate-800/80 text-center text-xs text-slate-500">
+                    Acceso protegido. Demostración por defecto: <b>admin</b> / <b>1234</b>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== DASHBOARD MAIN SYSTEM ==================== -->
+        <div id="dashboard-view" class="hidden min-h-screen flex-col bg-slate-950">
+
+            <!-- NAVBAR -->
+            <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between h-16">
+                        <!-- Logo -->
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xl shadow-md">
+                                <i class="fa-solid fa-helmet-safety"></i>
+                            </div>
+                            <div>
+                                <span class="font-extrabold text-white text-lg tracking-wide block leading-none">EXCAVACIONES CORTÉS</span>
+                                <span class="text-[10px] text-amber-500 font-semibold tracking-widest uppercase">Panel de Administración</span>
+                            </div>
+                        </div>
+
+                        <!-- User Info / Logout -->
+                        <div class="flex items-center gap-4">
+                            <div class="hidden md:flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-full border border-slate-800 text-xs">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-slate-400">Admin:</span>
+                                <span class="text-white font-semibold">Administrador General</span>
+                            </div>
+                            <button onclick="handleLogout()" class="text-slate-400 hover:text-red-400 p-2 rounded-lg hover:bg-slate-800 transition" title="Cerrar Sesión">
+                                <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NAVIGATION TABS -->
+                <nav class="bg-slate-900/60 border-t border-slate-800/60 px-4 sm:px-6 lg:px-8 overflow-x-auto custom-scrollbar">
+                    <div class="max-w-7xl mx-auto flex space-x-2 py-2 min-w-max">
+                        <button onclick="switchTab('trips')" id="tab-btn-trips" class="tab-btn flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all text-amber-500 bg-slate-800 border border-amber-500/30">
+                            <i class="fa-solid fa-route"></i>
+                            <span>Control de Viajes</span>
+                        </button>
+
+                        <button onclick="switchTab('fuel')" id="tab-btn-fuel" class="tab-btn flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800">
+                            <i class="fa-solid fa-gas-pump"></i>
+                            <span>Control Combustible</span>
+                        </button>
+
+                        <button onclick="switchTab('workers')" id="tab-btn-workers" class="tab-btn flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 relative">
+                            <i class="fa-solid fa-id-card"></i>
+                            <span>Vigencia Personal</span>
+                            <span id="badge-workers" class="hidden px-1.5 py-0.5 text-[10px] bg-red-500 text-white font-bold rounded-full">0</span>
+                        </button>
+
+                        <button onclick="switchTab('trucks')" id="tab-btn-trucks" class="tab-btn flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all text-slate-400 hover:text-white hover:bg-slate-800 relative">
+                            <i class="fa-solid fa-truck-moving"></i>
+                            <span>Documentos Volquetas</span>
+                            <span id="badge-trucks" class="hidden px-1.5 py-0.5 text-[10px] bg-red-500 text-white font-bold rounded-full">0</span>
+                        </button>
+                    </div>
+                </nav>
+            </header>
+
+            <!-- MAIN CONTENT AREA -->
+            <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+                <!-- SUMMARY METRICS CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Viajes Hoy</p>
+                            <h3 id="stat-total-trips" class="text-2xl font-extrabold text-white mt-1">0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-truck-ramp-box"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Combustible Total</p>
+                            <h3 id="stat-total-fuel" class="text-2xl font-extrabold text-white mt-1">0 <span class="text-xs font-normal text-slate-400">Gal</span></h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-droplet"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Alertas Trabajadores</p>
+                            <h3 id="stat-worker-alerts" class="text-2xl font-extrabold text-amber-400 mt-1">0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-slate-400 font-medium">Alertas Volquetas</p>
+                            <h3 id="stat-truck-alerts" class="text-2xl font-extrabold text-red-400 mt-1">0</h3>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= SECTION 1: VIAJES ================= -->
+                <section id="section-trips" class="tab-content space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-route text-amber-500"></i> Control de Volquetas y Viajes
+                            </h2>
+                            <p class="text-xs text-slate-400">Registro de acarreos y movimiento de material</p>
+                        </div>
+                        <button onclick="openModal('modal-trip')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/10 transition">
+                            <i class="fa-solid fa-plus"></i> Registrar Nuevo Viaje
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Fecha</th>
+                                        <th class="p-4">Placa Volqueta</th>
+                                        <th class="p-4">Conductor</th>
+                                        <th class="p-4">Material</th>
+                                        <th class="p-4">Origen / Destino</th>
+                                        <th class="p-4 text-center">Viajes</th>
+                                        <th class="p-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-trips" class="divide-y divide-slate-800/60 text-slate-300">
+                                    <!-- Dynamic Content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= SECTION 2: COMBUSTIBLE ================= -->
+                <section id="section-fuel" class="tab-content hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-gas-pump text-amber-500"></i> Control de Combustible (ACPME / Diesel)
+                            </h2>
+                            <p class="text-xs text-slate-400">Registro de tanquetadas, consumos e kilometrajes</p>
+                        </div>
+                        <button onclick="openModal('modal-fuel')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/10 transition">
+                            <i class="fa-solid fa-plus"></i> Registrar Carga
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Fecha</th>
+                                        <th class="p-4">Volqueta (Placa)</th>
+                                        <th class="p-4">Galones Cargados</th>
+                                        <th class="p-4">Costo Total ($)</th>
+                                        <th class="p-4">Km / Horas Actual</th>
+                                        <th class="p-4">Estación / Proveedor</th>
+                                        <th class="p-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-fuel" class="divide-y divide-slate-800/60 text-slate-300">
+                                    <!-- Dynamic Content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= SECTION 3: TRABAJADORES ================= -->
+                <section id="section-workers" class="tab-content hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-id-card text-amber-500"></i> Documentos y Vigencias de Personal
+                            </h2>
+                            <p class="text-xs text-slate-400">Control de licencias, exámenes médicos, ARL y certificaciones</p>
+                        </div>
+                        <button onclick="openModal('modal-worker')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/10 transition">
+                            <i class="fa-solid fa-plus"></i> Registrar Documento Personal
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Trabajador</th>
+                                        <th class="p-4">Cargo</th>
+                                        <th class="p-4">Tipo Documento</th>
+                                        <th class="p-4">Vencimiento</th>
+                                        <th class="p-4 text-center">Estado Vigencia</th>
+                                        <th class="p-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-workers" class="divide-y divide-slate-800/60 text-slate-300">
+                                    <!-- Dynamic Content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ================= SECTION 4: VOLQUETAS ================= -->
+                <section id="section-trucks" class="tab-content hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-truck-moving text-amber-500"></i> Documentos y Vigencias de Maquinaria/Volquetas
+                            </h2>
+                            <p class="text-xs text-slate-400">Semáforo de alertas para SOAT, Tecnomecánica y Seguros</p>
+                        </div>
+                        <button onclick="openModal('modal-truck')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-amber-500/10 transition">
+                            <i class="fa-solid fa-plus"></i> Registrar Documento Volqueta
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Placa / Código</th>
+                                        <th class="p-4">Modelo / Tipo</th>
+                                        <th class="p-4">Documento / Mantenimiento</th>
+                                        <th class="p-4">Fecha Vencimiento</th>
+                                        <th class="p-4 text-center">Estado Semáforo</th>
+                                        <th class="p-4 text-right">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-trucks" class="divide-y divide-slate-800/60 text-slate-300">
+                                    <!-- Dynamic Content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="bg-slate-900 border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+                <p>Sistema de Control Operativo - Excavaciones Cortés S.A.S. &copy; 2026</p>
+            </footer>
+        </div>
+
+    </div>
+
+    <!-- ================= MODALS SECTION ================= -->
+
+    <!-- MODAL 1: NUEVO VIAJE -->
+    <div id="modal-trip" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base">Registrar Nuevo Viaje</h3>
+                <button onclick="closeModal('modal-trip')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveTrip(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Placa Volqueta</label>
+                    <input type="text" id="trip-plate" required placeholder="Ej. SKZ-458" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white uppercase outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Conductor Asignado</label>
+                    <input type="text" id="trip-driver" required placeholder="Ej. Carlos Mendoza" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Material Excavado</label>
+                    <select id="trip-material" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                        <option value="Tierra / Recebo">Tierra / Recebo</option>
+                        <option value="Roca / Piedra">Roca / Piedra</option>
+                        <option value="Escombro Limpio">Escombro Limpio</option>
+                        <option value="Arena / Grava">Arena / Grava</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Origen (Cantera/Obra)</label>
+                        <input type="text" id="trip-origin" required placeholder="Obra Norte" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Destino (Botadero)</label>
+                        <input type="text" id="trip-destination" required placeholder="Escombrera Sur" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Número de Viajes Realizados</label>
+                    <input type="number" id="trip-count" min="1" value="1" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-trip')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-600">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: NUEVO COMBUSTIBLE -->
+    <div id="modal-fuel" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base">Registrar Carga de Combustible</h3>
+                <button onclick="closeModal('modal-fuel')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveFuel(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Placa Volqueta</label>
+                    <input type="text" id="fuel-plate" required placeholder="Ej. SKZ-458" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white uppercase outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Galones Cargados</label>
+                        <input type="number" step="0.1" id="fuel-gallons" required placeholder="35.5" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Costo Total ($)</label>
+                        <input type="number" id="fuel-cost" required placeholder="350000" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Kilometraje / Horas Actuales</label>
+                    <input type="number" id="fuel-km" required placeholder="145200" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Estación de Servicio / Proveedor</label>
+                    <input type="text" id="fuel-station" required placeholder="Estación Texaco Norte" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-fuel')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-600">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: DOCUMENTO TRABAJADOR -->
+    <div id="modal-worker" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base">Registrar Vigencia Trabajador</h3>
+                <button onclick="closeModal('modal-worker')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveWorkerDoc(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Nombre Completo del Trabajador</label>
+                    <input type="text" id="worker-name" required placeholder="Ej. Juan Pérez" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Cargo</label>
+                    <select id="worker-role" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                        <option value="Conductor Volqueta">Conductor Volqueta</option>
+                        <option value="Operador Excavadora">Operador Excavadora</option>
+                        <option value="Auxiliar de Obra">Auxiliar de Obra</option>
+                        <option value="Supervisor de Seguridad">Supervisor de Seguridad (SST)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Tipo de Documento</label>
+                    <select id="worker-doctype" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                        <option value="Licencia Conducción (C2/C3)">Licencia Conducción (C2/C3)</option>
+                        <option value="Examen Médico Ocupacional">Examen Médico Ocupacional</option>
+                        <option value="Afiliación ARL">Afiliación ARL</option>
+                        <option value="Curso de Alturas / Seguridad">Curso de Alturas / Seguridad</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Fecha de Vencimiento</label>
+                    <input type="date" id="worker-expiry" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-worker')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-600">Guardar Documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: DOCUMENTO VOLQUETA -->
+    <div id="modal-truck" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base">Registrar Vigencia Volqueta</h3>
+                <button onclick="closeModal('modal-truck')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveTruckDoc(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Placa / Código Volqueta</label>
+                    <input type="text" id="truck-plate" required placeholder="Ej. SKZ-458" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white uppercase outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Modelo / Marca</label>
+                    <input type="text" id="truck-model" required placeholder="Ej. Kenworth T800 / 2022" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Documento / Trámite</label>
+                    <select id="truck-doctype" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                        <option value="SOAT">SOAT</option>
+                        <option value="Revisión Tecnomecánica">Revisión Tecnomecánica</option>
+                        <option value="Seguro Todo Riesgo">Seguro Todo Riesgo</option>
+                        <option value="Mantenimiento Preventivo">Mantenimiento Preventivo</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Fecha de Vencimiento</label>
+                    <input type="date" id="truck-expiry" required class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-amber-500">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-truck')" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-lg hover:bg-amber-600">Guardar Vigencia</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // DATA INITIALIZATION WITH DEMO RECORDS
+        let state = {
+            trips: [
+                { id: 1, date: '2026-11-07', plate: 'SKZ-458', driver: 'Gonzalo Ramírez', material: 'Roca / Piedra', origin: 'Cantera El Paraíso', destination: 'Obra Autopista Norte', count: 6 },
+                { id: 2, date: '2026-11-07', plate: 'WTL-890', driver: 'Marcos Soler', material: 'Tierra / Recebo', origin: 'Excavación Lote 4', destination: 'Botadero Autorizado', count: 8 }
+            ],
+            fuel: [
+                { id: 1, date: '2026-11-06', plate: 'SKZ-458', gallons: 40, cost: 380000, km: '124,500', station: 'Mobil Calle 80' },
+                { id: 2, date: '2026-11-05', plate: 'WTL-890', gallons: 52, cost: 494000, km: '98,200', station: 'Terpel Central' }
+            ],
+            workers: [
+                { id: 1, name: 'Gonzalo Ramírez', role: 'Conductor Volqueta', docType: 'Licencia Conducción (C2/C3)', expiry: '2026-12-15' },
+                { id: 2, name: 'Marcos Soler', role: 'Conductor Volqueta', docType: 'Examen Médico Ocupacional', expiry: '2026-11-02' },
+                { id: 3, name: 'Hernán Gómez', role: 'Operador Excavadora', docType: 'Afiliación ARL', expiry: '2026-11-20' }
+            ],
+            trucks: [
+                { id: 1, plate: 'SKZ-458', model: 'Kenworth T800 (2021)', docType: 'SOAT', expiry: '2026-11-01' },
+                { id: 2, plate: 'WTL-890', model: 'International WorkStar', docType: 'Revisión Tecnomecánica', expiry: '2026-11-18' },
+                { id: 3, plate: 'FGR-123', model: 'Chevrolet FVZ (2023)', docType: 'Seguro Todo Riesgo', expiry: '2027-05-10' }
+            ]
+        };
+
+        // LOGIN SYSTEM
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const alertBox = document.getElementById('login-alert');
+
+            if (user === 'admin' && pass === '1234') {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                document.getElementById('dashboard-view').classList.add('flex');
+                alertBox.classList.add('hidden');
+                renderAll();
+            } else {
+                alertBox.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('dashboard-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('flex');
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('password').value = '';
+        }
+
+        // NAVIGATION TABS
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-amber-500', 'bg-slate-800', 'border', 'border-amber-500/30');
+                btn.classList.add('text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            activeBtn.classList.add('text-amber-500', 'bg-slate-800', 'border', 'border-amber-500/30');
+            activeBtn.classList.remove('text-slate-400');
+        }
+
+        // MODAL CONTROL
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // STATUS HELPER (Traffic Light System)
+        function getStatusInfo(expiryDateStr) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const expiry = new Date(expiryDateStr);
+            const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) {
+                return { label: 'VENCIDO', color: 'bg-red-500/10 text-red-400 border-red-500/30', icon: 'fa-circle-xmark', code: 'expired' };
+            } else if (diffDays <= 15) {
+                return { label: `POR VENCER (${diffDays}d)`, color: 'bg-amber-500/10 text-amber-400 border-amber-500/30', icon: 'fa-triangle-exclamation', code: 'warning' };
+            } else {
+                return { label: 'VIGENTE', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30', icon: 'fa-circle-check', code: 'valid' };
+            }
+        }
+
+        // RENDER FUNCTIONS
+        function renderAll() {
+            renderTrips();
+            renderFuel();
+            renderWorkers();
+            renderTrucks();
+            updateMetrics();
+        }
+
+        function renderTrips() {
+            const tbody = document.getElementById('table-trips');
+            tbody.innerHTML = state.trips.map(item => `
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="p-4 font-mono text-slate-400">${item.date}</td>
+                    <td class="p-4 font-bold text-white uppercase">${item.plate}</td>
+                    <td class="p-4">${item.driver}</td>
+                    <td class="p-4"><span class="px-2 py-1 bg-slate-800 rounded text-amber-400 font-medium">${item.material}</span></td>
+                    <td class="p-4 text-slate-400">${item.origin} &rarr; ${item.destination}</td>
+                    <td class="p-4 text-center"><span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 font-bold rounded-full">${item.count}</span></td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteRecord('trips', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderFuel() {
+            const tbody = document.getElementById('table-fuel');
+            tbody.innerHTML = state.fuel.map(item => `
+                <tr class="hover:bg-slate-800/40 transition">
+                    <td class="p-4 font-mono text-slate-400">${item.date}</td>
+                    <td class="p-4 font-bold text-white uppercase">${item.plate}</td>
+                    <td class="p-4 font-semibold text-blue-400">${item.gallons} Gal</td>
+                    <td class="p-4 font-mono text-emerald-400">$${Number(item.cost).toLocaleString()}</td>
+                    <td class="p-4 text-slate-400">${item.km}</td>
+                    <td class="p-4">${item.station}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="deleteRecord('fuel', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderWorkers() {
+            const tbody = document.getElementById('table-workers');
+            tbody.innerHTML = state.workers.map(item => {
+                const status = getStatusInfo(item.expiry);
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-4 font-semibold text-white">${item.name}</td>
+                        <td class="p-4 text-slate-400">${item.role}</td>
+                        <td class="p-4">${item.docType}</td>
+                        <td class="p-4 font-mono">${item.expiry}</td>
+                        <td class="p-4 text-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold ${status.color}">
+                                <i class="fa-solid ${status.icon}"></i> ${status.label}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteRecord('workers', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTrucks() {
+            const tbody = document.getElementById('table-trucks');
+            tbody.innerHTML = state.trucks.map(item => {
+                const status = getStatusInfo(item.expiry);
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-4 font-bold text-white uppercase">${item.plate}</td>
+                        <td class="p-4 text-slate-400">${item.model}</td>
+                        <td class="p-4">${item.docType}</td>
+                        <td class="p-4 font-mono">${item.expiry}</td>
+                        <td class="p-4 text-center">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold ${status.color}">
+                                <i class="fa-solid ${status.icon}"></i> ${status.label}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <button onclick="deleteRecord('trucks', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // METRICS UPDATE
+        function updateMetrics() {
+            // Total trips
+            const totalTrips = state.trips.reduce((acc, cur) => acc + Number(cur.count), 0);
+            document.getElementById('stat-total-trips').innerText = totalTrips;
+
+            // Total fuel
+            const totalFuel = state.fuel.reduce((acc, cur) => acc + Number(cur.gallons), 0);
+            document.getElementById('stat-total-fuel').innerHTML = `${totalFuel.toFixed(1)} <span class="text-xs font-normal text-slate-400">Gal</span>`;
+
+            // Worker alerts
+            const workerAlerts = state.workers.filter(w => getStatusInfo(w.expiry).code !== 'valid').length;
+            document.getElementById('stat-worker-alerts').innerText = workerAlerts;
+            const workerBadge = document.getElementById('badge-workers');
+            if (workerAlerts > 0) {
+                workerBadge.innerText = workerAlerts;
+                workerBadge.classList.remove('hidden');
+            } else {
+                workerBadge.classList.add('hidden');
+            }
+
+            // Truck alerts
+            const truckAlerts = state.trucks.filter(t => getStatusInfo(t.expiry).code !== 'valid').length;
+            document.getElementById('stat-truck-alerts').innerText = truckAlerts;
+            const truckBadge = document.getElementById('badge-trucks');
+            if (truckAlerts > 0) {
+                truckBadge.innerText = truckAlerts;
+                truckBadge.classList.remove('hidden');
+            } else {
+                truckBadge.classList.add('hidden');
+            }
+        }
+
+        // SAVE FORM HANDLERS
+        function saveTrip(e) {
+            e.preventDefault();
+            const today = new Date().toISOString().split('T')[0];
+            state.trips.unshift({
+                id: Date.now(),
+                date: today,
+                plate: document.getElementById('trip-plate').value.trim().toUpperCase(),
+                driver: document.getElementById('trip-driver').value.trim(),
+                material: document.getElementById('trip-material').value,
+                origin: document.getElementById('trip-origin').value.trim(),
+                destination: document.getElementById('trip-destination').value.trim(),
+                count: parseInt(document.getElementById('trip-count').value)
+            });
+            closeModal('modal-trip');
+            renderAll();
+            e.target.reset();
+        }
+
+        function saveFuel(e) {
+            e.preventDefault();
+            const today = new Date().toISOString().split('T')[0];
+            state.fuel.unshift({
+                id: Date.now(),
+                date: today,
+                plate: document.getElementById('fuel-plate').value.trim().toUpperCase(),
+                gallons: parseFloat(document.getElementById('fuel-gallons').value),
+                cost: parseFloat(document.getElementById('fuel-cost').value),
+                km: document.getElementById('fuel-km').value.trim(),
+                station: document.getElementById('fuel-station').value.trim()
+            });
+            closeModal('modal-fuel');
+            renderAll();
+            e.target.reset();
+        }
+
+        function saveWorkerDoc(e) {
+            e.preventDefault();
+            state.workers.unshift({
+                id: Date.now(),
+                name: document.getElementById('worker-name').value.trim(),
+                role: document.getElementById('worker-role').value,
+                docType: document.getElementById('worker-doctype').value,
+                expiry: document.getElementById('worker-expiry').value
+            });
+            closeModal('modal-worker');
+            renderAll();
+            e.target.reset();
+        }
+
+        function saveTruckDoc(e) {
+            e.preventDefault();
+            state.trucks.unshift({
+                id: Date.now(),
+                plate: document.getElementById('truck-plate').value.trim().toUpperCase(),
+                model: document.getElementById('truck-model').value.trim(),
+                docType: document.getElementById('truck-doctype').value,
+                expiry: document.getElementById('truck-expiry').value
+            });
+            closeModal('modal-truck');
+            renderAll();
+            e.target.reset();
+        }
+
+        // DELETE RECORD
+        function deleteRecord(category, id) {
+            state[category] = state[category].filter(item => item.id !== id);
+            renderAll();
+        }
+    </script>
+</body>
+</html>
