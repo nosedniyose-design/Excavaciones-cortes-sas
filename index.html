@@ -520,38 +520,61 @@
             </form>
         </div>
     </div>
-const firebaseConfig = {
-  apiKey: "AIzaSyD0W_kj_xov8OeCkRswct5PC_F7gW8dI-A",
-  authDomain: "excavaciones-cortes.firebaseapp.com",
-  projectId: "excavaciones-cortes",
-  storageBucket: "excavaciones-cortes.firebasestorage.app",
-  messagingSenderId: "1061846762521",
-  appId: "1:1061846762521:web:cbc422c4d33688e1055688",
-  measurementId: "G-FJJ668HFBT"
-};
+
+    <!-- FIREBASE INITIALIZATION -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0W_kj_xov8OeCkRswct5PC_F7gW8dI-A",
+            authDomain: "excavaciones-cortes.firebaseapp.com",
+            projectId: "excavaciones-cortes",
+            storageBucket: "excavaciones-cortes.firebasestorage.app",
+            messagingSenderId: "1061846762521",
+            appId: "1:1061846762521:web:cbc422c4d33688e1055688",
+            measurementId: "G-FJJ668HFBT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.getDocs = getDocs;
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
+
+        if (typeof window.loadDataFromFirebase === 'function') {
+            window.loadDataFromFirebase();
+        }
+    </script>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // DATA INITIALIZATION WITH DEMO RECORDS
+        // CLOUD STORAGE STATE
         let state = {
-            trips: [
-                { id: 1, date: '2026-11-07', plate: 'SKZ-458', driver: 'Gonzalo Ramírez', material: 'Roca / Piedra', origin: 'Cantera El Paraíso', destination: 'Obra Autopista Norte', count: 6 },
-                { id: 2, date: '2026-11-07', plate: 'WTL-890', driver: 'Marcos Soler', material: 'Tierra / Recebo', origin: 'Excavación Lote 4', destination: 'Botadero Autorizado', count: 8 }
-            ],
-            fuel: [
-                { id: 1, date: '2026-11-06', plate: 'SKZ-458', gallons: 40, cost: 380000, km: '124,500', station: 'Mobil Calle 80' },
-                { id: 2, date: '2026-11-05', plate: 'WTL-890', gallons: 52, cost: 494000, km: '98,200', station: 'Terpel Central' }
-            ],
-            workers: [
-                { id: 1, name: 'Gonzalo Ramírez', role: 'Conductor Volqueta', docType: 'Licencia Conducción (C2/C3)', expiry: '2026-12-15' },
-                { id: 2, name: 'Marcos Soler', role: 'Conductor Volqueta', docType: 'Examen Médico Ocupacional', expiry: '2026-11-02' },
-                { id: 3, name: 'Hernán Gómez', role: 'Operador Excavadora', docType: 'Afiliación ARL', expiry: '2026-11-20' }
-            ],
-            trucks: [
-                { id: 1, plate: 'SKZ-458', model: 'Kenworth T800 (2021)', docType: 'SOAT', expiry: '2026-11-01' },
-                { id: 2, plate: 'WTL-890', model: 'International WorkStar', docType: 'Revisión Tecnomecánica', expiry: '2026-11-18' },
-                { id: 3, plate: 'FGR-123', model: 'Chevrolet FVZ (2023)', docType: 'Seguro Todo Riesgo', expiry: '2027-05-10' }
-            ]
+            trips: [],
+            fuel: [],
+            workers: [],
+            trucks: []
         };
+
+        // LOAD DATA FROM FIRESTORE
+        async function loadDataFromFirebase() {
+            if (!window.db) return;
+            try {
+                const collections = ['trips', 'fuel', 'workers', 'trucks'];
+                for (let col of collections) {
+                    const querySnapshot = await window.getDocs(window.collection(window.db, col));
+                    state[col] = querySnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+                }
+                renderAll();
+            } catch (e) {
+                console.error("Error cargando de Firebase: ", e);
+            }
+        }
+        window.loadDataFromFirebase = loadDataFromFirebase;
 
         // LOGIN SYSTEM
         function handleLogin(e) {
@@ -565,7 +588,7 @@ const firebaseConfig = {
                 document.getElementById('dashboard-view').classList.remove('hidden');
                 document.getElementById('dashboard-view').classList.add('flex');
                 alertBox.classList.add('hidden');
-                renderAll();
+                loadDataFromFirebase();
             } else {
                 alertBox.classList.remove('hidden');
             }
@@ -630,14 +653,14 @@ const firebaseConfig = {
             const tbody = document.getElementById('table-trips');
             tbody.innerHTML = state.trips.map(item => `
                 <tr class="hover:bg-slate-800/40 transition">
-                    <td class="p-4 font-mono text-slate-400">${item.date}</td>
-                    <td class="p-4 font-bold text-white uppercase">${item.plate}</td>
-                    <td class="p-4">${item.driver}</td>
-                    <td class="p-4"><span class="px-2 py-1 bg-slate-800 rounded text-amber-400 font-medium">${item.material}</span></td>
-                    <td class="p-4 text-slate-400">${item.origin} &rarr; ${item.destination}</td>
-                    <td class="p-4 text-center"><span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 font-bold rounded-full">${item.count}</span></td>
+                    <td class="p-4 font-mono text-slate-400">${item.date || ''}</td>
+                    <td class="p-4 font-bold text-white uppercase">${item.plate || ''}</td>
+                    <td class="p-4">${item.driver || ''}</td>
+                    <td class="p-4"><span class="px-2 py-1 bg-slate-800 rounded text-amber-400 font-medium">${item.material || ''}</span></td>
+                    <td class="p-4 text-slate-400">${item.origin || ''} &rarr; ${item.destination || ''}</td>
+                    <td class="p-4 text-center"><span class="px-2.5 py-1 bg-amber-500/20 text-amber-300 font-bold rounded-full">${item.count || 0}</span></td>
                     <td class="p-4 text-right">
-                        <button onclick="deleteRecord('trips', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="deleteRecord('trips', '${item.id}')" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -647,14 +670,14 @@ const firebaseConfig = {
             const tbody = document.getElementById('table-fuel');
             tbody.innerHTML = state.fuel.map(item => `
                 <tr class="hover:bg-slate-800/40 transition">
-                    <td class="p-4 font-mono text-slate-400">${item.date}</td>
-                    <td class="p-4 font-bold text-white uppercase">${item.plate}</td>
-                    <td class="p-4 font-semibold text-blue-400">${item.gallons} Gal</td>
-                    <td class="p-4 font-mono text-emerald-400">$${Number(item.cost).toLocaleString()}</td>
-                    <td class="p-4 text-slate-400">${item.km}</td>
-                    <td class="p-4">${item.station}</td>
+                    <td class="p-4 font-mono text-slate-400">${item.date || ''}</td>
+                    <td class="p-4 font-bold text-white uppercase">${item.plate || ''}</td>
+                    <td class="p-4 font-semibold text-blue-400">${item.gallons || 0} Gal</td>
+                    <td class="p-4 font-mono text-emerald-400">$${Number(item.cost || 0).toLocaleString()}</td>
+                    <td class="p-4 text-slate-400">${item.km || ''}</td>
+                    <td class="p-4">${item.station || ''}</td>
                     <td class="p-4 text-right">
-                        <button onclick="deleteRecord('fuel', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="deleteRecord('fuel', '${item.id}')" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -666,17 +689,17 @@ const firebaseConfig = {
                 const status = getStatusInfo(item.expiry);
                 return `
                     <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-4 font-semibold text-white">${item.name}</td>
-                        <td class="p-4 text-slate-400">${item.role}</td>
-                        <td class="p-4">${item.docType}</td>
-                        <td class="p-4 font-mono">${item.expiry}</td>
+                        <td class="p-4 font-semibold text-white">${item.name || ''}</td>
+                        <td class="p-4 text-slate-400">${item.role || ''}</td>
+                        <td class="p-4">${item.docType || ''}</td>
+                        <td class="p-4 font-mono">${item.expiry || ''}</td>
                         <td class="p-4 text-center">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold ${status.color}">
                                 <i class="fa-solid ${status.icon}"></i> ${status.label}
                             </span>
                         </td>
                         <td class="p-4 text-right">
-                            <button onclick="deleteRecord('workers', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteRecord('workers', '${item.id}')" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -689,17 +712,17 @@ const firebaseConfig = {
                 const status = getStatusInfo(item.expiry);
                 return `
                     <tr class="hover:bg-slate-800/40 transition">
-                        <td class="p-4 font-bold text-white uppercase">${item.plate}</td>
-                        <td class="p-4 text-slate-400">${item.model}</td>
-                        <td class="p-4">${item.docType}</td>
-                        <td class="p-4 font-mono">${item.expiry}</td>
+                        <td class="p-4 font-bold text-white uppercase">${item.plate || ''}</td>
+                        <td class="p-4 text-slate-400">${item.model || ''}</td>
+                        <td class="p-4">${item.docType || ''}</td>
+                        <td class="p-4 font-mono">${item.expiry || ''}</td>
                         <td class="p-4 text-center">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-bold ${status.color}">
                                 <i class="fa-solid ${status.icon}"></i> ${status.label}
                             </span>
                         </td>
                         <td class="p-4 text-right">
-                            <button onclick="deleteRecord('trucks', ${item.id})" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteRecord('trucks', '${item.id}')" class="text-slate-500 hover:text-red-400 transition"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -708,15 +731,12 @@ const firebaseConfig = {
 
         // METRICS UPDATE
         function updateMetrics() {
-            // Total trips
-            const totalTrips = state.trips.reduce((acc, cur) => acc + Number(cur.count), 0);
+            const totalTrips = state.trips.reduce((acc, cur) => acc + Number(cur.count || 0), 0);
             document.getElementById('stat-total-trips').innerText = totalTrips;
 
-            // Total fuel
-            const totalFuel = state.fuel.reduce((acc, cur) => acc + Number(cur.gallons), 0);
+            const totalFuel = state.fuel.reduce((acc, cur) => acc + Number(cur.gallons || 0), 0);
             document.getElementById('stat-total-fuel').innerHTML = `${totalFuel.toFixed(1)} <span class="text-xs font-normal text-slate-400">Gal</span>`;
 
-            // Worker alerts
             const workerAlerts = state.workers.filter(w => getStatusInfo(w.expiry).code !== 'valid').length;
             document.getElementById('stat-worker-alerts').innerText = workerAlerts;
             const workerBadge = document.getElementById('badge-workers');
@@ -727,7 +747,6 @@ const firebaseConfig = {
                 workerBadge.classList.add('hidden');
             }
 
-            // Truck alerts
             const truckAlerts = state.trucks.filter(t => getStatusInfo(t.expiry).code !== 'valid').length;
             document.getElementById('stat-truck-alerts').innerText = truckAlerts;
             const truckBadge = document.getElementById('badge-trucks');
@@ -739,12 +758,11 @@ const firebaseConfig = {
             }
         }
 
-        // SAVE FORM HANDLERS
-        function saveTrip(e) {
+        // SAVE FORM HANDLERS (CONNECTED TO FIRESTORE)
+        async function saveTrip(e) {
             e.preventDefault();
             const today = new Date().toISOString().split('T')[0];
-            state.trips.unshift({
-                id: Date.now(),
+            const newRecord = {
                 date: today,
                 plate: document.getElementById('trip-plate').value.trim().toUpperCase(),
                 driver: document.getElementById('trip-driver').value.trim(),
@@ -752,61 +770,88 @@ const firebaseConfig = {
                 origin: document.getElementById('trip-origin').value.trim(),
                 destination: document.getElementById('trip-destination').value.trim(),
                 count: parseInt(document.getElementById('trip-count').value)
-            });
-            closeModal('modal-trip');
-            renderAll();
-            e.target.reset();
+            };
+
+            try {
+                await window.addDoc(window.collection(window.db, 'trips'), newRecord);
+                closeModal('modal-trip');
+                await loadDataFromFirebase();
+                e.target.reset();
+            } catch (err) {
+                alert("Error al guardar en Firebase: " + err.message);
+            }
         }
 
-        function saveFuel(e) {
+        async function saveFuel(e) {
             e.preventDefault();
             const today = new Date().toISOString().split('T')[0];
-            state.fuel.unshift({
-                id: Date.now(),
+            const newRecord = {
                 date: today,
                 plate: document.getElementById('fuel-plate').value.trim().toUpperCase(),
                 gallons: parseFloat(document.getElementById('fuel-gallons').value),
                 cost: parseFloat(document.getElementById('fuel-cost').value),
                 km: document.getElementById('fuel-km').value.trim(),
                 station: document.getElementById('fuel-station').value.trim()
-            });
-            closeModal('modal-fuel');
-            renderAll();
-            e.target.reset();
+            };
+
+            try {
+                await window.addDoc(window.collection(window.db, 'fuel'), newRecord);
+                closeModal('modal-fuel');
+                await loadDataFromFirebase();
+                e.target.reset();
+            } catch (err) {
+                alert("Error al guardar en Firebase: " + err.message);
+            }
         }
 
-        function saveWorkerDoc(e) {
+        async function saveWorkerDoc(e) {
             e.preventDefault();
-            state.workers.unshift({
-                id: Date.now(),
+            const newRecord = {
                 name: document.getElementById('worker-name').value.trim(),
                 role: document.getElementById('worker-role').value,
                 docType: document.getElementById('worker-doctype').value,
                 expiry: document.getElementById('worker-expiry').value
-            });
-            closeModal('modal-worker');
-            renderAll();
-            e.target.reset();
+            };
+
+            try {
+                await window.addDoc(window.collection(window.db, 'workers'), newRecord);
+                closeModal('modal-worker');
+                await loadDataFromFirebase();
+                e.target.reset();
+            } catch (err) {
+                alert("Error al guardar en Firebase: " + err.message);
+            }
         }
 
-        function saveTruckDoc(e) {
+        async function saveTruckDoc(e) {
             e.preventDefault();
-            state.trucks.unshift({
-                id: Date.now(),
+            const newRecord = {
                 plate: document.getElementById('truck-plate').value.trim().toUpperCase(),
                 model: document.getElementById('truck-model').value.trim(),
                 docType: document.getElementById('truck-doctype').value,
                 expiry: document.getElementById('truck-expiry').value
-            });
-            closeModal('modal-truck');
-            renderAll();
-            e.target.reset();
+            };
+
+            try {
+                await window.addDoc(window.collection(window.db, 'trucks'), newRecord);
+                closeModal('modal-truck');
+                await loadDataFromFirebase();
+                e.target.reset();
+            } catch (err) {
+                alert("Error al guardar en Firebase: " + err.message);
+            }
         }
 
-        // DELETE RECORD
-        function deleteRecord(category, id) {
-            state[category] = state[category].filter(item => item.id !== id);
-            renderAll();
+        // DELETE RECORD FROM FIRESTORE
+        async function deleteRecord(category, id) {
+            if (confirm("¿Estás seguro de eliminar este registro?")) {
+                try {
+                    await window.deleteDoc(window.doc(window.db, category, id));
+                    await loadDataFromFirebase();
+                } catch (err) {
+                    alert("Error al eliminar: " + err.message);
+                }
+            }
         }
     </script>
 </body>
